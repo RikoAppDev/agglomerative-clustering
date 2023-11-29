@@ -57,6 +57,12 @@ if __name__ == '__main__':
     clusters: list = clustering.clusters
     centroids: list = clustering.centroids
 
+    # print("\n clusters")
+    # for cluster in clusters:
+    #     print(cluster)
+    # print("\n centroids")
+    # print(centroids)
+
     root = Tk()
     root.attributes('-topmost', True)
     root.geometry(

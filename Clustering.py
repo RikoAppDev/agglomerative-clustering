@@ -75,13 +75,6 @@ class Clustering:
         self.distance_matrix = [row[:merged_indices[1]] + row[merged_indices[1] + 1:] for row in self.distance_matrix]
         del self.distance_matrix[merged_indices[1]]
 
-        # Add distances to the new cluster
-        for i, distance in enumerate(distances_to_new_cluster):
-            self.distance_matrix[i].append(distance)
-
-        # Add a new row for the new cluster
-        self.distance_matrix.append(distances_to_new_cluster + [0])
-
     def calculate_cluster_centroid(self, cluster):
         points_amount = len(cluster)
         x = y = 0
