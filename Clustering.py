@@ -3,11 +3,11 @@ import random
 
 from constants import *
 from tqdm import tqdm
-from itertools import combinations
 
 
 class Clustering:
     def __init__(self, amount, cluster_count, seed):
+        self.amount = amount
         self.cluster_count = cluster_count
         self.clusters = []
         self.distance_matrix = []
@@ -15,7 +15,7 @@ class Clustering:
         self.generate_places_progress_bar = tqdm(
             desc="Generating points", total=amount + 20, unit="point"
         )
-        self.init_points = self.generate_init_points(int(amount), seed)
+        self.init_points = self.generate_init_points(int(INITIAL_POINTS), seed)
         self.all_points = self.init_points[:]
         self.other_points = self.generate_other_points()
         self.colors = set(COLORS)
@@ -24,7 +24,7 @@ class Clustering:
 
     def agglomerative_clustering(self):
         progress_bar = tqdm(
-            desc="Agglomerative clustering", total=OTHER_POINTS + INITIAL_POINTS - self.cluster_count, unit="point"
+            desc="Agglomerative clustering", total=self.amount + INITIAL_POINTS - self.cluster_count, unit="point"
         )
 
         while len(self.clusters) > self.cluster_count:
@@ -32,23 +32,24 @@ class Clustering:
             min_distance = float('inf')
             merge_indices = (0, 1)
 
-            for i, j in combinations(range(len(self.clusters)), 2):
-                distance = self.calculate_cluster_distance(self.clusters[i], self.clusters[j])
-                if distance < min_distance:
-                    min_distance = distance
-                    merge_indices = (i, j)
+            for i in range(len(self.distance_matrix)):
+                for j in range(i):
+                    if self.distance_matrix[i][j] < min_distance:
+                        min_distance = self.distance_matrix[i][j]
+                        merge_indices = (j, i)
 
             # Merge the two closest clusters
-            merged_cluster = self.clusters[merge_indices[0]] + self.clusters[merge_indices[1]]
-            del self.clusters[merge_indices[1]]
-            self.clusters[merge_indices[0]] = merged_cluster
+            self.clusters[merge_indices[0]].extend(self.clusters.pop(merge_indices[1]))
+
+            # Merge centers
+            self.centroids[merge_indices[0]] = self.calculate_cluster_centroid(self.clusters[merge_indices[0]])
+            del self.centroids[merge_indices[1]]
 
             # Update the distance matrix
             self.update_distance_matrix(merge_indices)
             progress_bar.update(1)
 
         progress_bar.close()
-        self.centroids = [self.calculate_cluster_centroid(cluster) for cluster in self.clusters]
 
     def calculate_cluster_distance(self, cluster1, cluster2):
         total_distance = 0
@@ -62,15 +63,6 @@ class Clustering:
         return total_distance / pair_count
 
     def update_distance_matrix(self, merged_indices):
-        # Update the distance matrix after merging clusters
-        new_cluster_index = merged_indices[0]
-        distances_to_new_cluster = []
-
-        for i in range(len(self.clusters)):
-            if i != new_cluster_index:
-                distance = self.calculate_cluster_distance(self.clusters[new_cluster_index], self.clusters[i])
-                distances_to_new_cluster.append(distance)
-
         # Remove the old distances related to the merged clusters
         self.distance_matrix = [row[:merged_indices[1]] + row[merged_indices[1] + 1:] for row in self.distance_matrix]
         del self.distance_matrix[merged_indices[1]]
@@ -136,6 +128,7 @@ class Clustering:
             point = (x, y)
             points.append(point)
             self.clusters.append([point])
+            self.centroids.append(self.calculate_cluster_centroid([point]))
             self.distance_matrix.append(self.get_new_row(point))
             self.generate_places_progress_bar.update(1)
 
@@ -144,7 +137,7 @@ class Clustering:
     def generate_other_points(self):
         points = []
 
-        for i in range(OTHER_POINTS):
+        for i in range(self.amount):
             random_created_point = random.choice(self.all_points)
 
             x_offset = random.randint(
@@ -161,6 +154,7 @@ class Clustering:
             points.append(point)
             self.all_points.append(point)
             self.clusters.append([point])
+            self.centroids.append(self.calculate_cluster_centroid([point]))
             self.distance_matrix.append(self.get_new_row(point))
             self.generate_places_progress_bar.update(1)
 

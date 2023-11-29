@@ -10,14 +10,18 @@ def recalculate_position(value):
     return resize_value * value
 
 
-def show_centroids_points(point, w_map, c):
+def show_clustering_point(point, number, w_map, c):
     w_map.create_oval(
-        recalculate_position(point[0]) - POINT_DIAMETER,
-        recalculate_position(point[1]) - POINT_DIAMETER,
-        recalculate_position(point[0]) + POINT_DIAMETER,
-        recalculate_position(point[1]) + POINT_DIAMETER,
+        recalculate_position(point[0]) - POINT_DIAMETER * 2,
+        recalculate_position(point[1]) - POINT_DIAMETER * 2,
+        recalculate_position(point[0]) + POINT_DIAMETER * 2,
+        recalculate_position(point[1]) + POINT_DIAMETER * 2,
         outline="black", fill=c
     )
+    w_map.create_text(recalculate_position(point[0]),
+                      recalculate_position(point[1]), text=number,
+                      fill="black",
+                      font=f'"Comic Sans MS" {POINT_DIAMETER * 2} normal')
 
 
 def show_all_points(points, w_map, c):
@@ -49,11 +53,24 @@ def number_of_clusters():
             print("‼️ Error ‼️\n\t- Input numeric value")
 
 
+def handle_points_number_input():
+    while True:
+        points = input("🔢 Input number of points >> ")
+        if points.isdigit():
+            if int(points) >= 0:
+                return int(points)
+            else:
+                print("‼️ Error ‼️\n\t- Number of points must be positive")
+        else:
+            print("‼️ Error ‼️\n\t- Input numeric value")
+
+
 if __name__ == '__main__':
     seed = input("Input world seed 🫘 >> ")
     amount_of_clusters = number_of_clusters()
+    amount_of_points = handle_points_number_input()
 
-    clustering = Clustering(INITIAL_POINTS, amount_of_clusters, seed)
+    clustering = Clustering(amount_of_points, amount_of_clusters, seed)
     clusters: list = clustering.clusters
     centroids: list = clustering.centroids
 
@@ -78,7 +95,7 @@ if __name__ == '__main__':
     for i, cluster in enumerate(clusters):
         color = random_color(colors)
         show_all_points(cluster, world_map, color)
-        show_centroids_points(centroids[i], world_map, color)
+        show_clustering_point(centroids[i], i, world_map, color)
         clustering.evaluate_cluster(i, cluster, color)
 
     print("\nℹ️ INFO: RESULT IS DISPLAYED IN WINDOW\n\t- Clustering")
