@@ -10,18 +10,37 @@ def recalculate_position(value):
     return resize_value * value
 
 
+def is_color_dark(hex_color):
+    # Convert hex to RGB
+    r, g, b = int(hex_color[1:3], 16), int(hex_color[3:5], 16), int(hex_color[5:7], 16)
+
+    # Calculate luminance (perceived brightness)
+    luminance = 0.299 * r + 0.587 * g + 0.114 * b
+
+    # You can adjust the luminance threshold as needed
+    luminance_threshold = 128
+
+    # Return True if the color is considered dark, False otherwise
+    return luminance < luminance_threshold
+
+
 def show_clustering_point(point, number, w_map, c):
+    # Check if the cluster color is dark
+    contrast_color = "white" if is_color_dark(c) else "black"
+
     w_map.create_oval(
         recalculate_position(point[0]) - POINT_DIAMETER * 2,
         recalculate_position(point[1]) - POINT_DIAMETER * 2,
         recalculate_position(point[0]) + POINT_DIAMETER * 2,
         recalculate_position(point[1]) + POINT_DIAMETER * 2,
-        outline="black", fill=c
+        outline=contrast_color, fill=c
     )
-    w_map.create_text(recalculate_position(point[0]),
-                      recalculate_position(point[1]), text=number,
-                      fill="black",
-                      font=f'"Comic Sans MS" {POINT_DIAMETER * 2} normal')
+    w_map.create_text(
+        recalculate_position(point[0]),
+        recalculate_position(point[1]), text=number,
+        fill=contrast_color,
+        font=f'"Comic Sans MS" {POINT_DIAMETER * 2} normal'
+    )
 
 
 def show_all_points(points, w_map, c):
@@ -65,20 +84,27 @@ def handle_points_number_input():
             print("‼️ Error ‼️\n\t- Input numeric value")
 
 
+def handle_clustering_type_input():
+    while True:
+        option = input("⚙️ Choose clustering type using centroid 1️⃣ or medoid 2️⃣ >> ")
+        if option.isdigit():
+            if int(option) in [1, 2]:
+                return int(option)
+            else:
+                print(f"‼️ Error ‼️\n\t- Clustering type {option} not supported")
+        else:
+            print("‼️ Error ‼️\n\t- Clustering type must be numeric value")
+
+
 if __name__ == '__main__':
     seed = input("Input world seed 🫘 >> ")
     amount_of_clusters = number_of_clusters()
+    clustering_type = handle_clustering_type_input()
     amount_of_points = handle_points_number_input()
 
-    clustering = Clustering(amount_of_points, amount_of_clusters, seed)
+    clustering = Clustering(amount_of_points, amount_of_clusters, clustering_type, seed)
     clusters: list = clustering.clusters
-    centroids: list = clustering.centroids
-
-    # print("\n clusters")
-    # for cluster in clusters:
-    #     print(cluster)
-    # print("\n centroids")
-    # print(centroids)
+    centroids: list = clustering.clustering_points
 
     root = Tk()
     root.attributes('-topmost', True)
