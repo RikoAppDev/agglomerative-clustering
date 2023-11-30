@@ -29,7 +29,7 @@ class Clustering:
 
     def agglomerative_clustering(self):
         progress_bar = tqdm(
-            desc="Agglomerative clustering", total=self.amount + INITIAL_POINTS - self.cluster_count, unit="point"
+            desc="Agglomerative clustering", total=self.amount + INITIAL_POINTS - self.cluster_count, unit="cluster"
         )
 
         while len(self.clusters) > self.cluster_count:
@@ -41,15 +41,13 @@ class Clustering:
                 for j in range(i):
                     if self.distance_matrix[i][j] < min_distance:
                         min_distance = self.distance_matrix[i][j]
-                        merge_indices = (i, j)
+                        merge_indices = (j, i)
 
             # Merge the two closest clusters
-            merged_cluster = self.clusters[merge_indices[0]] + self.clusters[merge_indices[1]]
-            self.clusters[merge_indices[0]] = merged_cluster
-            del self.clusters[merge_indices[1]]
+            self.clusters[merge_indices[0]].extend(self.clusters.pop(merge_indices[1]))
 
             # Merge clustering points
-            self.clustering_points[merge_indices[0]] = self.clustering_point(merged_cluster)
+            self.clustering_points[merge_indices[0]] = self.clustering_point(self.clusters[merge_indices[0]])
             del self.clustering_points[merge_indices[1]]
 
             # Update the distance matrix
@@ -58,21 +56,28 @@ class Clustering:
 
         progress_bar.close()
 
-    def calculate_cluster_distance(self, cluster1, cluster2):
-        total_distance = 0
-        pair_count = 0
-
-        for point1 in cluster1:
-            for point2 in cluster2:
-                total_distance += self.calculate_distance(point1, point2)
-                pair_count += 1
-
-        return total_distance / pair_count
-
     def update_distance_matrix(self, merged_indices):
+        # Update the distance matrix after merging clusters
+        new_cluster_index = merged_indices[0]
+        distances_to_new_cluster = []
+
+        for i in range(len(self.clusters)):
+            if i != new_cluster_index:
+                distance = self.calculate_distance(self.clustering_points[new_cluster_index], self.clustering_points[i])
+                distances_to_new_cluster.append(distance)
+
         # Remove the old distances related to the merged clusters
-        self.distance_matrix = [row[:merged_indices[1]] + row[merged_indices[1] + 1:] for row in self.distance_matrix]
         del self.distance_matrix[merged_indices[1]]
+        for i in range(merged_indices[1] + 1, len(self.distance_matrix)):
+            del self.distance_matrix[i][merged_indices[1]]
+
+        # Update distance matrix to the merged cluster
+        new_row_distances = distances_to_new_cluster[:merged_indices[0]]
+        self.distance_matrix[merged_indices[0]] = new_row_distances + [0]
+
+        # Update distance matrix from the merged cluster
+        for i in range(merged_indices[0] + 1, len(self.distance_matrix)):
+            self.distance_matrix[i][new_cluster_index] = distances_to_new_cluster[i - 1]
 
     @staticmethod
     def calculate_cluster_centroid(cluster):

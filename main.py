@@ -111,7 +111,7 @@ if __name__ == '__main__':
     root.geometry(
         '%dx%d+%d+%d' % (ACTUAL_WINDOW_SIZE, ACTUAL_WINDOW_SIZE, root.winfo_screenwidth() - ACTUAL_WINDOW_SIZE - 10, 0))
     root.resizable(False, False)
-    root.title("Clustering")
+    root.title("Aglomerative Clustering")
 
     world_map = Canvas(root, width=ACTUAL_WINDOW_SIZE, height=ACTUAL_WINDOW_SIZE)
     world_map.pack()
@@ -124,5 +124,5 @@ if __name__ == '__main__':
         show_clustering_point(centroids[i], i, world_map, color)
         clustering.evaluate_cluster(i, cluster, color)
 
-    print("\nℹ️ INFO: RESULT IS DISPLAYED IN WINDOW\n\t- Clustering")
+    print("\nℹ️ INFO: RESULT IS DISPLAYED IN WINDOW\n\t- Aglomerative Clustering")
     mainloop()
