@@ -11,21 +11,15 @@ def recalculate_position(value):
 
 
 def is_color_dark(hex_color):
-    # Convert hex to RGB
     r, g, b = int(hex_color[1:3], 16), int(hex_color[3:5], 16), int(hex_color[5:7], 16)
 
-    # Calculate luminance (perceived brightness)
     luminance = 0.299 * r + 0.587 * g + 0.114 * b
-
-    # You can adjust the luminance threshold as needed
     luminance_threshold = 128
 
-    # Return True if the color is considered dark, False otherwise
     return luminance < luminance_threshold
 
 
 def show_clustering_point(point, number, w_map, c):
-    # Check if the cluster color is dark
     contrast_color = "white" if is_color_dark(c) else "black"
 
     w_map.create_oval(
@@ -111,7 +105,9 @@ if __name__ == '__main__':
     root.geometry(
         '%dx%d+%d+%d' % (ACTUAL_WINDOW_SIZE, ACTUAL_WINDOW_SIZE, root.winfo_screenwidth() - ACTUAL_WINDOW_SIZE - 10, 0))
     root.resizable(False, False)
-    root.title("Aglomerative Clustering")
+    root.title(
+        f"Aglomerative clustering using {'centroid' if clustering_type == 1 else 'medoid'} - {amount_of_points} points (seed: {seed})"
+    )
 
     world_map = Canvas(root, width=ACTUAL_WINDOW_SIZE, height=ACTUAL_WINDOW_SIZE)
     world_map.pack()
